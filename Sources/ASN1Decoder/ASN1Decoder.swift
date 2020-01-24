@@ -15,14 +15,21 @@ enum ASN1Error: Error {
   case invalidType
 }
 
-final public class ASN1Decoder {
+/// Decoder for ASN1 data
+public final class ASN1Decoder {
   public var pointer: UnsafePointer<UInt8>!
 
+  /// Create new instance with ASN1
+  /// - Parameter pointer: Pointer on data where should start read
   public init(pointer: UnsafePointer<UInt8>?) {
     self.pointer = pointer
   }
 
-  public func readNextObject(_ pointer: inout UnsafePointer<UInt8>?, with objectLength: Int) -> ASN1Object {
+  /// Read `ASN1Object`
+  /// - Parameters:
+  ///   - pointer: Pointer on start of object. This method move with pointer, in some case you probably need use copy of your pointer
+  ///   - objectLength: Lenght of object
+  public func readObject(_ pointer: inout UnsafePointer<UInt8>?, with objectLength: Int) -> ASN1Object {
     var type = Int32(0)
     var xclass = Int32(0)
     var length = 0
@@ -42,6 +49,10 @@ final public class ASN1Decoder {
     )
   }
 
+  /// Read number `Int`
+  /// - Parameters:
+  ///   - pointer: Pointer on start of object. This method move with pointer, in some case you probably need use copy of your pointer
+  ///   - objectLength: Length of object
   public func readInteger(_ pointer: inout UnsafePointer<UInt8>?, with objectLength: Int) -> Int? {
     let integer = d2i_ASN1_INTEGER(
       nil,
@@ -53,8 +64,12 @@ final public class ASN1Decoder {
     return result
   }
 
+  /// Read `String` with `UTF8` or `IA5` type
+  /// - Parameters:
+  ///   - pointer: Pointer on start of object. This method move with pointer, in some case you probably need use copy of your pointer
+  ///   - objectLength: Length of object
   public func readString(_ pointer: inout UnsafePointer<UInt8>?, with objectLength: Int) -> String? {
-    let object = readNextObject(&pointer, with: objectLength)
+    let object = readObject(&pointer, with: objectLength)
 
     switch object.type {
     case V_ASN1_UTF8STRING:
@@ -78,10 +93,18 @@ final public class ASN1Decoder {
     }
   }
 
+  /// Read raw `Data`
+  /// - Parameters:
+  ///   - pointer: Pointer on start of object. This method move with pointer, in some case you probably need use copy of your pointer
+  ///   - objectLength: Length of object
   public func readData(_ pointer: inout UnsafePointer<UInt8>?, with length: Int) -> NSData {
     return NSData(bytes: &pointer, length: length)
   }
 
+  /// Read `Date` in US POSIX format `yyyy'-'MM'-'dd'T'HH':'mm':'ss'Z'`
+  /// - Parameters:
+  ///   - pointer: Pointer on start of object. This method move with pointer, in some case you probably need use copy of your pointer
+  ///   - objectLength: Length of object
   public func readDate(_ pointer: inout UnsafePointer<UInt8>?, length: Int) -> Date? {
     guard let dateInString = readString(&pointer, with: length) else {
       return nil
@@ -95,10 +118,13 @@ final public class ASN1Decoder {
     return formatter.date(from: dateInString)
   }
 
+  /// Read `ASN1Sequence` where validate sequence `type` and required parameters - `length` `octet` and value `type`
+  /// Can be use for example in Apple Receipt https://developer.apple.com/library/archive/releasenotes/General/ValidateAppStoreReceipt/Chapters/ValidateLocally.html
+  /// - Parameter endOfSequence: End of current sequence
   public func readSequence(with endOfSequence: UnsafePointer<UInt8>) throws -> ASN1Sequence {
     // Get next ASN1 Sequence
     let length = pointer!.distance(to: endOfSequence)
-    let sequence = readNextObject(&pointer, with: length)
+    let sequence = readObject(&pointer, with: length)
     guard sequence.type == V_ASN1_SEQUENCE else {
       throw ASN1Error.invalidType
     }
@@ -116,7 +142,7 @@ final public class ASN1Decoder {
     }
 
     // Read octet string
-    let octet = readNextObject(&pointer, with: length)
+    let octet = readObject(&pointer, with: length)
     guard octet.type == V_ASN1_OCTET_STRING else {
       throw ASN1Error.missingOctet
     }
@@ -127,6 +153,8 @@ final public class ASN1Decoder {
     )
   }
 
+  /// Move current pointer with length
+  /// - Parameter length: Length where should move pointer from current location
   public func updateLocation(_ length: Int) {
     pointer = pointer?.advanced(by: length)
   }
