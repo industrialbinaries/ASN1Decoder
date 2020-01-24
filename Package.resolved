@@ -1,0 +1,16 @@
+{
+  "object": {
+    "pins": [
+      {
+        "package": "OpenSSL",
+        "repositoryURL": "https://github.com/industrialbinaries/OpenSSL",
+        "state": {
+          "branch": "feature/asn1",
+          "revision": "8b4896119788a3d313512adac57f5180b76eaff7",
+          "version": null
+        }
+      }
+    ]
+  },
+  "version": 1
+}
