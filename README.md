@@ -22,9 +22,9 @@ Then you can use your decoder to read base values from `ASN1`
 
 Note: Some method moves with the pointer when read value, for this case you should use a copy of your pointer 
  
-### Integer
+### Int
 ```swift
-let integerValue = decoder.readInteger(&pointer, with: length)
+let integerValue = decoder.readInt(&pointer, with: length)
 ```
 
 ### String
@@ -34,7 +34,7 @@ let stringValue = decoder.readString(&pointer, with: length)
 ```
 
 ### Date
-Read string and parse to `Date` with format `yyyy'-'MM'-'dd'T'HH':'mm':'ss'Z'`
+Read string and parse to `Date` with default format `yyyy'-'MM'-'dd'T'HH':'mm':'ss'Z'`
 ```swift
 let date = readDate(&pointer, length: length)
 ```

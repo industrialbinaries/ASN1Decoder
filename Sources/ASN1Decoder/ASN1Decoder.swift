@@ -27,7 +27,7 @@ public final class ASN1Decoder {
 
   /// Read `ASN1Object`
   /// - Parameters:
-  ///   - pointer: Pointer on start of object. This method move with pointer, in some case you probably need use copy of your pointer
+  ///   - pointer: Pointer the start of the object.
   ///   - objectLength: Lenght of object
   public func readObject(_ pointer: inout UnsafePointer<UInt8>?, with objectLength: Int) -> ASN1Object {
     var type = Int32(0)
@@ -51,9 +51,9 @@ public final class ASN1Decoder {
 
   /// Read number `Int`
   /// - Parameters:
-  ///   - pointer: Pointer on start of object. This method move with pointer, in some case you probably need use copy of your pointer
+  ///   - pointer: Pointer the start of the object.
   ///   - objectLength: Length of object
-  public func readInteger(_ pointer: inout UnsafePointer<UInt8>?, with objectLength: Int) -> Int? {
+  public func readInt(_ pointer: inout UnsafePointer<UInt8>?, with objectLength: Int) -> Int? {
     let integer = d2i_ASN1_INTEGER(
       nil,
       &pointer,
@@ -66,7 +66,7 @@ public final class ASN1Decoder {
 
   /// Read `String` with `UTF8` or `IA5` type
   /// - Parameters:
-  ///   - pointer: Pointer on start of object. This method move with pointer, in some case you probably need use copy of your pointer
+  ///   - pointer: Pointer the start of the object.
   ///   - objectLength: Length of object
   public func readString(_ pointer: inout UnsafePointer<UInt8>?, with objectLength: Int) -> String? {
     let object = readObject(&pointer, with: objectLength)
@@ -95,26 +95,20 @@ public final class ASN1Decoder {
 
   /// Read raw `Data`
   /// - Parameters:
-  ///   - pointer: Pointer on start of object. This method move with pointer, in some case you probably need use copy of your pointer
+  ///   - pointer: Pointer the start of the object.
   ///   - objectLength: Length of object
-  public func readData(_ pointer: inout UnsafePointer<UInt8>?, with length: Int) -> NSData {
-    return NSData(bytes: &pointer, length: length)
+  public func readData(_ pointer: inout UnsafePointer<UInt8>?, with count: Int) -> Data {
+    return Data(bytes: &pointer, count: count)
   }
 
   /// Read `Date` in US POSIX format `yyyy'-'MM'-'dd'T'HH':'mm':'ss'Z'`
   /// - Parameters:
-  ///   - pointer: Pointer on start of object. This method move with pointer, in some case you probably need use copy of your pointer
+  ///   - pointer: Pointer the start of the object.
   ///   - objectLength: Length of object
-  public func readDate(_ pointer: inout UnsafePointer<UInt8>?, length: Int) -> Date? {
+  public func readDate(_ pointer: inout UnsafePointer<UInt8>?, length: Int, formatter: DateFormatter = .posix) -> Date? {
     guard let dateInString = readString(&pointer, with: length) else {
       return nil
     }
-
-    let formatter = DateFormatter()
-    formatter.locale = Locale(identifier: "en_US_POSIX")
-    formatter.dateFormat = "yyyy'-'MM'-'dd'T'HH':'mm':'ss'Z'"
-    formatter.timeZone = TimeZone(secondsFromGMT: 0)
-
     return formatter.date(from: dateInString)
   }
 
@@ -131,13 +125,13 @@ public final class ASN1Decoder {
 
     // Read `Type`
     var nexLength = pointer!.distance(to: endOfSequence)
-    guard let type = readInteger(&pointer, with: nexLength) else {
+    guard let type = readInt(&pointer, with: nexLength) else {
       throw ASN1Error.invalidSequenceType
     }
 
     // Read `Version`
     nexLength = pointer!.distance(to: endOfSequence)
-    guard readInteger(&pointer, with: nexLength) != nil else {
+    guard readInt(&pointer, with: nexLength) != nil else {
       throw ASN1Error.missingLength
     }
 
@@ -157,5 +151,15 @@ public final class ASN1Decoder {
   /// - Parameter length: Length where should move pointer from current location
   public func updateLocation(_ length: Int) {
     pointer = pointer?.advanced(by: length)
+  }
+}
+
+public extension DateFormatter {
+  static var posix: DateFormatter {
+    let formatter = DateFormatter()
+    formatter.locale = Locale(identifier: "en_US_POSIX")
+    formatter.dateFormat = "yyyy'-'MM'-'dd'T'HH':'mm':'ss'Z'"
+    formatter.timeZone = TimeZone(secondsFromGMT: 0)
+    return formatter
   }
 }
