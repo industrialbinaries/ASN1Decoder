@@ -7,8 +7,9 @@
 
 import Foundation
 
+/// ASN1 Object with base structure `type` `xclass` and `length`
 public struct ASN1Object {
-  let type: Int32
-  let xclass: Int32
-  let length: Int
+  public let type: Int32
+  public let xclass: Int32
+  public let length: Int
 }

@@ -8,6 +8,6 @@
 import Foundation
 
 public struct ASN1Sequence {
-  let length: Int
-  let type: Int
+  public let length: Int
+  public let type: Int
 }
