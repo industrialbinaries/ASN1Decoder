@@ -52,12 +52,12 @@ public final class ASN1Decoder {
   /// Read number `Int`
   /// - Parameters:
   ///   - pointer: Pointer the start of the object.
-  ///   - objectLength: Length of object
-  public func readInt(_ pointer: inout UnsafePointer<UInt8>?, with objectLength: Int) -> Int? {
+  ///   - length: Length of object
+  public func readInt(_ pointer: inout UnsafePointer<UInt8>?, with length: Int) -> Int? {
     let integer = d2i_ASN1_INTEGER(
       nil,
       &pointer,
-      objectLength
+      length
     )
     let result = ASN1_INTEGER_get(integer)
     ASN1_INTEGER_free(integer)
@@ -131,7 +131,7 @@ public final class ASN1Decoder {
 
     // Read `Version`
     nexLength = pointer!.distance(to: endOfSequence)
-    guard readInt(&pointer, with: nexLength) != nil else {
+    guard let version = readInt(&pointer, with: nexLength) else {
       throw ASN1Error.missingLength
     }
 
@@ -143,6 +143,7 @@ public final class ASN1Decoder {
 
     return ASN1Sequence(
       length: octet.length,
+      version: version,
       type: type
     )
   }

@@ -7,7 +7,9 @@
 
 import Foundation
 
+/// ASN1 Sequence
 public struct ASN1Sequence {
   public let length: Int
+  public let version: Int
   public let type: Int
 }
